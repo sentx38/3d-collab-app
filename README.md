@@ -5,7 +5,10 @@
   <source srcset="/product-logo-w.svg" media="(prefers-color-scheme: dark)">
   <img src="/product-logo-b.svg" alt="Ваш логотип">
 </picture>
-	
+
+<br>
+<br>
+
 </div>
 
 <div align="center">
@@ -46,22 +49,22 @@
 	 ```
 
 2. **Установка зависимостей для фронтенда (Next.js)**  
-	 В папке `frontend` выполните:
+	 В папке `nextjs-client` выполните:
 	 ```bash
 	 npm install
 	 ```
 
 3. **Установка зависимостей для бэкенда (NestJS)**  
-	 В папке `backend` выполните:
+	 В папке `nestjs-server` выполните:
 	 ```bash
 	 npm install
 	 ```
 4. **Запуск приложения локально**  
-	 - Для фронтенда (в папке `frontend`):
+	 - Для фронтенда (в папке `nextjs-client`):
 		 ```bash
 		 npm run dev
 		 ```
-	 - Для бэкенда (в папке `backend`):
+	 - Для бэкенда (в папке `nestjs-server`):
 		 ```bash
 		 npm run start:dev
 		 ```
