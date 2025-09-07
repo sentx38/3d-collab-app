@@ -17,6 +17,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-blue) 
 ![Next.js](https://img.shields.io/badge/Next.js-15.5.2-black)
 ![NestJS](https://img.shields.io/badge/NestJS-11.0.10-red)
+![Автор](https://img.shields.io/badge/Автор-Еребакан_Денис_ИСП_412-green)
  
 </div>
 
