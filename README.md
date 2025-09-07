@@ -34,8 +34,8 @@
 
 1. **Клонирование репозитория**  
 	 ```bash
-	 git clone https://github.com/username/3DModelShare.git
-	 cd 3DModelShare
+	 git clone https://github.com/username/3d-collab-app.git
+	 cd 3d-collab-app
 	 ```
 
 2. **Установка зависимостей для фронтенда (Next.js)**  
