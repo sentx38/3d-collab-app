@@ -1,79 +1,65 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
-
-import { WeatherForecast } from './weather.dto'
+import { BadRequestException, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class WeatherService {
-	private readonly summaries = [
-		'Freezing',
-		'Bracing',
-		'Chilly',
-		'Cool',
-		'Mild',
-		'Warm',
-		'Balmy',
-		'Hot',
-		'Sweltering',
-		'Scorching'
-	]
+  private readonly summaries: string[] = [
+    'Freezing',
+    'Bracing',
+    'Chilly',
+    'Cool',
+    'Mild',
+    'Warm',
+    'Balmy',
+    'Hot',
+    'Sweltering',
+    'Scorching',
+  ];
 
-	getWeatherForecast(): WeatherForecast[] {
-		const forecasts: WeatherForecast[] = []
-		for (let i = 0; i < 5; i++) {
-			const date = new Date()
-			date.setDate(date.getDate() + i)
-			const temperatureC = Math.floor(Math.random() * 31) - 10 // Случайная температура от -10 до 20
-			const summary =
-				this.summaries[
-					Math.floor(Math.random() * this.summaries.length)
-				]
+  getAll(sortIndex?: number): string[] {
+    let result = [...this.summaries];
 
-			forecasts.push(new WeatherForecast())
-			forecasts[i].date = date.toISOString()
-			forecasts[i].temperatureC = temperatureC
-			forecasts[i].summary = summary
-		}
-		return forecasts
-	}
+    if (sortIndex === undefined) {
+      return result;
+    }
 
-	getAll(sortIndex?: number | null): string[] {
-		let result = [...this.summaries]
+    if (sortIndex === 1) {
+      return result.sort();
+    } else if (sortIndex === -1) {
+      return result.sort().reverse();
+    } else {
+      throw new BadRequestException('Некорректное значение параметра sortIndex');
+    }
+  }
 
-		if (sortIndex === null) {
-			return result
-		} else if (sortIndex === 1) {
-			return result.sort()
-		} else if (sortIndex === -1) {
-			return result.sort().reverse()
-		} else if (sortIndex !== undefined) {
-			throw new Error('Некорректное значение параметра sortIndex')
-		}
+  getSummaryByIndex(index: number): string {
+    if (index >= this.summaries.length) {
+      throw new BadRequestException('Индекс выходит за пределы массива');
+    }
+    return this.summaries[index];
+  }
 
-		return result
-	}
+  createSummary(summary: string): string[] {
+    this.summaries.push(summary);
+    return [...this.summaries];
+  }
 
-	createSummary(newSummary: string): string {
-		if (newSummary && !this.summaries.includes(newSummary)) {
-			this.summaries.push(newSummary)
-		}
-		return newSummary
-	}
+  updateSummary(index: number, newSummary: string): string {
+    if (index >= this.summaries.length) {
+      throw new BadRequestException('Индекс выходит за пределы массива');
+    }
+    this.summaries[index] = newSummary;
+    return newSummary;
+  }
 
-	updateSummary(index: number, newSummary: string) {
-		if (index < 0 || index >= this.summaries.length) {
-			throw new BadRequestException('Такой индекс неверный!!!!')
-		}
+  deleteSummary(index: number): string {
+    if (index >= this.summaries.length) {
+      throw new BadRequestException('Индекс выходит за пределы массива');
+    }
+    const deleted = this.summaries.splice(index, 1);
+    return deleted[0];
+  }
 
-		this.summaries[index] = newSummary
-		return newSummary
-	}
-
-	deleteSummary(index: number) {
-		if (index < 0 || index >= this.summaries.length) {
-			throw new BadRequestException('Такой индекс неверный!!!!')
-		}
-
-		const removed = this.summaries.splice(index, 1)[0]
-		return removed
-	}
+  findByName(name: string): number {
+    return this.summaries.filter((s) => s === name).length;
+  }
 }
