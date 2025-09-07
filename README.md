@@ -7,10 +7,12 @@
 </div>
 
 <div align="center">
+	
 	![Статус проекта](https://img.shields.io/badge/Статус-В_разработке-yellow)  
 	![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-blue)  
 	![Next.js](https://img.shields.io/badge/Next.js-15.5.2-black)  
 	![NestJS](https://img.shields.io/badge/NestJS-11.0.10-red)
+ 
 </div>
 
 
