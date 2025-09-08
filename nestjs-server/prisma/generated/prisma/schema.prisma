@@ -1,0 +1,322 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Управление пользователями и аутентификация
+model User {
+  id String @id @default(nanoid())
+
+  email    String @unique
+  password String
+
+  name               String?
+  displayName        String?
+  picture            String?
+  role               UserRole   @default(REGULAR)
+  isVerified         Boolean    @default(false) @map("is_verified")
+  isTwoFactorEnabled Boolean    @default(false) @map("is_two_factor_enabled")
+  method             AuthMethod
+
+  isAutoRenewal Boolean @default(true) @map("is_auto_renewal")
+
+  accounts        Account[]
+  subscriptions   UserSubscription[]
+  transactions    Transaction[]
+  models          Model[]
+  comments        Comment[]
+  likes           Like[]
+  favorites       Favorite[]
+  purchasedModels PurchasedModel[]
+  discounts       Discount[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Account {
+  id String @id @default(uuid())
+
+  type     String
+  provider String
+
+  refreshToken String? @map("refresh_token")
+  accessToken  String? @map("access_token")
+  expiresAt    Int?    @map("expires_at")
+
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String? @map("user_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("accounts")
+}
+
+model Token {
+  id String @id @default(uuid())
+
+  email     String
+  token     String    @unique
+  type      TokenType
+  expiresIn DateTime  @map("expires_in")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("tokens")
+}
+
+// Управление подписками
+model Plan {
+  id String @id @default(nanoid())
+
+  title       String
+  description String
+
+  features String[]
+
+  monthlyPrice Int @map("monthly_price")
+  yearlyPrice  Int @map("yearly_price")
+
+  isFeatured Boolean @default(false) @map("is_featured")
+
+  subscriptions UserSubscription[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("plans")
+}
+
+model UserSubscription {
+  id String @id @default(nanoid())
+
+  status    SubscriptionStatus @default(PENDING_PAYMENT)
+  startDate DateTime?          @map("start_date")
+  endDate   DateTime?          @map("end_date")
+
+  transactions Transaction[]
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique @map("user_id")
+
+  plan   Plan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planId String @map("plan_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("user_subscriptions")
+}
+
+// Транзакции и оплата
+model Transaction {
+  id String @id @default(nanoid())
+
+  amount   Int
+  provider PaymentProvider
+  status   TransactionStatus @default(PENDING)
+
+  externalId   String? @unique @map("external_id")
+  providerMeta Json?   @map("provider_meta")
+
+  billingPeriod BillingPeriod @map("billing_period")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+
+  subscription   UserSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  subscriptionId String           @map("subscription_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("transactions")
+}
+
+// 3D-модели и активы
+model Model {
+  id String @id @default(nanoid())
+
+  title       String
+  description String?
+  price       Int
+  isFree      Boolean @default(false)
+  previewUrl  String  @map("preview_url")
+  hdriMapUrl  String? @map("hdri_map_url")
+  gltfFileUrl String  @map("gltf_file_url")
+  authorId    String
+  categoryId  String
+
+  author   User     @relation(fields: [authorId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  comments        Comment[]
+  likes           Like[]
+  favorites       Favorite[]
+  purchasedModels PurchasedModel[] // <-- Added missing relation field
+  sales           Sale[] // <-- Added missing relation field
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("models")
+}
+
+model Category {
+  id     String  @id @default(nanoid())
+  name   String  @unique
+  models Model[]
+
+  @@map("categories")
+}
+
+// Взаимодействие пользователей
+model Comment {
+  id      String @id @default(nanoid())
+  content String
+  userId  String
+  modelId String
+  user    User   @relation(fields: [userId], references: [id])
+  model   Model  @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("comments")
+}
+
+model Like {
+  id      String @id @default(nanoid())
+  userId  String
+  modelId String
+  user    User   @relation(fields: [userId], references: [id])
+  model   Model  @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, modelId])
+  @@map("likes")
+}
+
+model Favorite {
+  id      String @id @default(nanoid())
+  userId  String
+  modelId String
+  user    User   @relation(fields: [userId], references: [id])
+  model   Model  @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, modelId])
+  @@map("favorites")
+}
+
+model PurchasedModel {
+  id      String @id @default(nanoid())
+  userId  String
+  modelId String
+  user    User   @relation(fields: [userId], references: [id])
+  model   Model  @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  purchaseDate DateTime @default(now()) @map("purchase_date")
+
+  @@unique([userId, modelId])
+  @@map("purchased_models")
+}
+
+// Скидки и продажи
+model Discount {
+  id         String   @id @default(nanoid())
+  code       String   @unique
+  percentage Int
+  expiryDate DateTime
+  isActive   Boolean  @default(true)
+  sales      Sale[]
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("discounts")
+}
+
+model Sale {
+  id           String   @id @default(nanoid())
+  discountCode String
+  modelId      String
+  discount     Discount @relation(fields: [discountCode], references: [code])
+  model        Model    @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([discountCode, modelId])
+  @@map("sales")
+}
+
+// Перечисления (Enums)
+enum SubscriptionStatus {
+  PENDING_PAYMENT
+  ACTIVE
+  EXPIRED
+
+  @@map("subscription_statuses")
+}
+
+enum PaymentProvider {
+  YOOKASSA
+
+  @@map("payment_providers")
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+
+  @@map("transaction_statuses")
+}
+
+enum BillingPeriod {
+  MONTHLY
+  YEARLY
+
+  @@map("billing_periods")
+}
+
+enum UserRole {
+  REGULAR
+  ADMIN
+
+  @@map("user_roles")
+}
+
+enum AuthMethod {
+  CREDENTIALS
+  GOOGLE
+  YANDEX
+
+  @@map("auth_methods")
+}
+
+enum TokenType {
+  VERIFICATION
+  TWO_FACTOR
+  PASSWORD_RESET
+
+  @@map("token_types")
+}

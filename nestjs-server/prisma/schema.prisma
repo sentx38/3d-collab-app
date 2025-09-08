@@ -168,6 +168,8 @@ model Model {
   comments    Comment[]
   likes       Like[]
   favorites   Favorite[]
+  purchasedModels PurchasedModel[] // <-- Added missing relation field
+  sales       Sale[]           // <-- Added missing relation field
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -225,11 +227,11 @@ model Favorite {
 }
 
 model PurchasedModel {
-  id      String @id @default(nanoid())
-  userId  String
-  modelId String
-  user    User   @relation(fields: [userId], references: [id])
-  model   Model  @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  id           String   @id @default(nanoid())
+  userId       String
+  modelId      String
+  user         User     @relation(fields: [userId], references: [id])
+  model        Model    @relation(fields: [modelId], references: [id], onDelete: Cascade)
 
   purchaseDate DateTime @default(now()) @map("purchase_date")
 
